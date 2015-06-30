@@ -44,6 +44,19 @@ class BlogsController < ApplicationController
     Blog.update_all_blogs
     redirect_to blogs_path
   end
+
+  def update_feed!
+  @newest_entry = entries.order(published: :desc).first
+  download_success_date = lambda { |url, feed|
+    next unless !@newest_entry || entry.published > @newest_entry.published
+    add_new_entry_from_feed(entry)
+  }
+  Feedjira::Feed.fetch_and_parse(
+    url,
+    on_success: download_success_date,
+    on_failure: download_failure
+  )
+end
   private
 
   def blog_params
